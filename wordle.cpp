@@ -13,7 +13,7 @@ using namespace std;
 
 
 // Add prototypes of helper functions here
-void wordleHelper(string& candidate, const string& in, string remaining_floating, size_t pos, const set<string>& dict, set<string>& results);
+void wordleHelper(string& currentWord, const string& in, string unusedLetters, size_t pos, const set<string>& dict, set<string>& validWords);
 
 
 
@@ -24,22 +24,25 @@ std::set<std::string> wordle(
     const std::set<std::string>& dict)
 {
     // Add your code here
-    set<string> results;
-    string candidate = in;
-    wordleHelper(candidate, in, floating, 0, dict, results);
+    set<string> validWords; 
 
-    return results;
+    string currentWord = in;
+    wordleHelper(currentWord, in, floating, 0, dict, validWords);//recursively searching
+
+    return validWords;
 
 }
 
 // Define any helper functions here
-void wordleHelper(string& candidate, const string& in, string remaining_floating, size_t pos, const set<string>& dict, set<string>& results){
+void wordleHelper(string& currentWord, const string& in, string unusedLetters, size_t pos, const set<string>& dict, set<string>& validWords){
 
-    if(pos == in.length()){
-        if(remaining_floating.empty()){
+    if(pos == in.length()){ // when filled all psotions
+        if(unusedLetters.empty()){ //if we used all the unused letters
 
-             if(dict.find(candidate)!=dict.end()){
-                results.insert(candidate);
+             if(dict.find(currentWord)!=dict.end()){ //if word is valid
+
+                validWords.insert(currentWord); //insert to results
+
                 }
 
         return;
@@ -48,50 +51,50 @@ void wordleHelper(string& candidate, const string& in, string remaining_floating
     }
        
 
-    if(in[pos]!='-'){
-        candidate[pos] = in[pos];
-        wordleHelper(candidate, in, remaining_floating, pos+1, dict, results);
+    if(in[pos]!='-'){ //if current position has a letter
+        currentWord[pos] = in[pos];
+        wordleHelper(currentWord, in, unusedLetters, pos+1, dict, validWords);
         return;
     }
 
     size_t remaining_blanks = 0;
-    for(size_t i=pos; i<in.length(); i++){
+
+    for(size_t i=pos; i<in.length(); i++){ //count the remaining blanks
 
         if(in[i] == '-'){
             remaining_blanks++;
         }
     }
 
-    for(size_t i=0; i<remaining_floating.length(); i++){
+    for(size_t i=0; i<unusedLetters.length(); i++){ //for each remaining letters
 
 
-        char floatChar = remaining_floating[i];
-        candidate[pos] = floatChar;
+        char floatChar = unusedLetters[i];
+        currentWord[pos] = floatChar;
 
-        string new_remaining = remaining_floating;
-        new_remaining.erase(i,1);
+        string new_remaining = unusedLetters;
+        new_remaining.erase(i,1); //remove letter form unused letters
 
-        wordleHelper(candidate, in, new_remaining, pos+1, dict, results);
+        wordleHelper(currentWord, in, new_remaining, pos+1, dict, validWords); //recursively fill next pos
 
     }
 
-    if(remaining_blanks>remaining_floating.length()){
+    if(remaining_blanks>unusedLetters.length()){ //if more balnks than floating letters
 
         for(char c='a'; c<='z'; c++){
 
             bool skip = false;
-            for(size_t j =-0; j<remaining_floating.length(); j++){
-
-                if(c==remaining_floating[j]){
-
+						
+            for(size_t j =-0; j<unusedLetters.length(); j++){
+                if(c==unusedLetters[j]){ //if letter is already in the floating letters
                     skip = true;
                     break;
                 }
             }
 
             if(!skip){
-                candidate[pos] = c;
-                wordleHelper(candidate, in, remaining_floating, pos+1, dict, results);
+                currentWord[pos] = c; //try current letter for pos
+                wordleHelper(currentWord, in, unusedLetters, pos+1, dict, validWords); //recursively fill next pos
             }
         }
     }
